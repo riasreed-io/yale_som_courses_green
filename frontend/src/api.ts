@@ -109,6 +109,14 @@ async function request<T>(path: string, init?: RequestInit, signal?: AbortSignal
 // endpoints
 // --------------------------------------------------------------------------
 
+export interface AppConfig {
+  auth_required: boolean
+}
+
+export function fetchConfig(): Promise<AppConfig> {
+  return request<AppConfig>('/api/config')
+}
+
 export function fetchCourses(q: string, signal?: AbortSignal): Promise<CoursesResponse> {
   const query = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''
   return request<CoursesResponse>(`/api/courses${query}`, undefined, signal)

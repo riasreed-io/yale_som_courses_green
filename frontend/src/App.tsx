@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { clearSession, fetchCourses, getUsername, UnauthorizedError } from './api'
+import { clearSession, fetchConfig, fetchCourses, getUsername, UnauthorizedError } from './api'
 import type { Course } from './api'
 import ChatPanel from './components/ChatPanel'
 import CourseCard from './components/CourseCard'
@@ -7,6 +7,8 @@ import Login from './components/Login'
 
 export default function App() {
   const [username, setUsername] = useState<string | null>(getUsername())
+  // null until /api/config answers; decides whether the login gate shows.
+  const [authRequired, setAuthRequired] = useState<boolean | null>(null)
   const [query, setQuery] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,8 +21,18 @@ export default function App() {
     setCourses([])
   }, [])
 
+  // Ask the backend whether accounts are required before deciding what to show.
   useEffect(() => {
-    if (!username) return
+    fetchConfig()
+      .then((cfg) => setAuthRequired(cfg.auth_required))
+      // If config can't be reached, fail closed and show the login screen.
+      .catch(() => setAuthRequired(true))
+  }, [])
+
+  const gateOpen = authRequired === false || Boolean(username)
+
+  useEffect(() => {
+    if (!gateOpen) return
     const controller = new AbortController()
     const timer = setTimeout(() => {
       setLoading(true)
@@ -45,7 +57,7 @@ export default function App() {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [query, username, signOut])
+  }, [query, gateOpen, signOut])
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
@@ -53,7 +65,11 @@ export default function App() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1])
   }, [courses])
 
-  if (!username) {
+  if (authRequired === null) {
+    return <p className="notice">Loading…</p>
+  }
+
+  if (!gateOpen) {
     return <Login onSignedIn={setUsername} />
   }
 
@@ -63,14 +79,16 @@ export default function App() {
     <>
       <header className="hero">
         <div className="hero__inner">
-          <div className="hero__account">
-            <span>
-              Signed in as <strong>{username}</strong>
-            </span>
-            <button type="button" onClick={signOut}>
-              Sign out
-            </button>
-          </div>
+          {username ? (
+            <div className="hero__account">
+              <span>
+                Signed in as <strong>{username}</strong>
+              </span>
+              <button type="button" onClick={signOut}>
+                Sign out
+              </button>
+            </div>
+          ) : null}
 
           <p className="hero__eyebrow">Yale School of Management</p>
           <h1>Course Explorer</h1>
@@ -124,7 +142,7 @@ export default function App() {
         ) : null}
       </main>
 
-      <ChatPanel onUnauthorized={signOut} />
+      <ChatPanel onUnauthorized={authRequired ? signOut : () => {}} />
     </>
   )
 }

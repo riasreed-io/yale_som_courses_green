@@ -427,5 +427,23 @@
     ],
     "stopped": "final answer (finish_reason=stop)",
     "reply": "Uri Simonsohn teaches:\n\n- **MGMT 7307 — Method Stumblers Part 1**\n  - **Section:** 01\n  - **Term:** Fall 1\n  - **Meets:** Wednesdays, 4:10–7:10 PM\n  - **Room:** Evans 4210\n  - **Units:** 0.5\n  - **Category:** PhD"
+  },
+  {
+    "time": "2026-09-23T18:18:19+00:00",
+    "user_message": "Name one finance course and when it meets.",
+    "model": "gpt-6-astra",
+    "thoughts": [],
+    "tool_calls": [
+      {
+        "tool": "search_courses",
+        "args": {
+          "query": "One Yale SOM finance course and its meeting days and times",
+          "limit": 5
+        },
+        "result": "{\"total_matches\":1,\"returned\":1,\"note\":\"\",\"courses\":[{\"number\":\"MGT 541\",\"section\":\"01\",\"title\":\"Corporate Finance\",\"faculty\":\"Tookes, Heather\",\"category\":\"Finance\",\"type\":\"elective,MMS AM\",\"session\":\"fall-1\",\"day_time\":\"M W 8:30 AM-9:50 AM\",\"room\":\"EVANS 4430\",\"units\":\"2.0\",\"syllabus\":\"https://yal…"
+      }
+    ],
+    "stopped": "final answer (finish_reason=stop)",
+    "reply": "**MGT 541: Corporate Finance** meets **Mondays and Wednesdays, 8:30–9:50 AM**."
   }
 ]

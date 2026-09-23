@@ -177,6 +177,21 @@ def get_user_by_id(user_id: int) -> dict[str, Any] | None:
     return dict(row) if row else None
 
 
+GUEST_USERNAME = "guest"
+
+
+def get_or_create_guest() -> dict[str, Any]:
+    """The shared account used when AUTH_REQUIRED is off.
+
+    Its password_hash is not a valid bcrypt string, so bcrypt.checkpw always
+    fails and nobody can log in as "guest" through the normal login route.
+    """
+    existing = get_user_by_username(GUEST_USERNAME)
+    if existing:
+        return existing
+    return create_user(GUEST_USERNAME, "!login-disabled")
+
+
 def create_user(username: str, password_hash: str) -> dict[str, Any]:
     with get_engine().begin() as con:
         con.execute(

@@ -45,6 +45,16 @@ app.add_middleware(
 
 bearer = HTTPBearer(auto_error=False)
 
+# Set AUTH_REQUIRED=false to open the app to anyone — no login screen, and chat
+# history is kept under a shared "guest" account. The full login/signup system
+# stays available; flip this back to true to require accounts again.
+AUTH_REQUIRED = (os.getenv("AUTH_REQUIRED") or "true").strip().lower() not in {
+    "false",
+    "0",
+    "no",
+    "off",
+}
+
 
 @app.on_event("startup")
 def _startup() -> None:
@@ -87,23 +97,36 @@ class ChatMessage(BaseModel):
 # --------------------------------------------------------------------------
 
 
+def _unauthorized(detail: str) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+
 def current_user(
     creds: HTTPAuthorizationCredentials | None = Depends(bearer),
 ) -> dict:
-    if creds is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Sign in to continue."
-        )
-    try:
-        user_id = auth.verify_token(creds.credentials)
-    except auth.AuthError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
-    user = db.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account no longer exists."
-        )
-    return user
+    """Resolve the caller.
+
+    With AUTH_REQUIRED on, a valid bearer token is mandatory. With it off, a
+    valid token is still honoured (so signed-in users keep their own history)
+    and everyone else shares the guest account.
+    """
+    if creds is not None:
+        try:
+            user_id = auth.verify_token(creds.credentials)
+        except auth.AuthError as exc:
+            if AUTH_REQUIRED:
+                raise _unauthorized(str(exc)) from exc
+            return db.get_or_create_guest()
+        user = db.get_user_by_id(user_id)
+        if user:
+            return user
+        if AUTH_REQUIRED:
+            raise _unauthorized("Account no longer exists.")
+        return db.get_or_create_guest()
+
+    if AUTH_REQUIRED:
+        raise _unauthorized("Sign in to continue.")
+    return db.get_or_create_guest()
 
 
 # --------------------------------------------------------------------------
@@ -114,6 +137,12 @@ def current_user(
 @app.get("/api/health")
 def health():
     return {"ok": True, "database": db.database_url().split("@")[-1]}
+
+
+@app.get("/api/config")
+def config():
+    """Lets the frontend know whether to show the login screen."""
+    return {"auth_required": AUTH_REQUIRED}
 
 
 @app.post("/api/auth/signup", response_model=AuthResponse)
