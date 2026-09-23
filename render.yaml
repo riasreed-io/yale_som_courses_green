@@ -23,10 +23,8 @@ services:
       # Portkey key — set in the dashboard, never here.
       - key: PORTKEY_API_KEY
         sync: false
-      # No login gate on the deployed site. Set to "true" to require accounts;
-      # the signup/login system stays in the code either way.
-      - key: AUTH_REQUIRED
-        value: "false"
+      # AUTH_REQUIRED now defaults to false in main.py, so no login gate and
+      # no env var needed. Set it to "true" here to require accounts instead.
       # DATABASE_URL is intentionally NOT set: the app falls back to the
       # committed data/yale_som.db (SQLite). Courses always work, but Render's
       # free filesystem is ephemeral, so accounts and chat history reset on

@@ -45,14 +45,15 @@ app.add_middleware(
 
 bearer = HTTPBearer(auto_error=False)
 
-# Set AUTH_REQUIRED=false to open the app to anyone — no login screen, and chat
-# history is kept under a shared "guest" account. The full login/signup system
-# stays available; flip this back to true to require accounts again.
-AUTH_REQUIRED = (os.getenv("AUTH_REQUIRED") or "true").strip().lower() not in {
-    "false",
-    "0",
-    "no",
-    "off",
+# Defaults to OFF so the deployed site opens straight to the catalog and chat
+# with no login, and needs no env var to do it. History is then kept under a
+# shared "guest" account. The full signup/login system is still here and still
+# works — set AUTH_REQUIRED=true to put the login gate back in front.
+AUTH_REQUIRED = (os.getenv("AUTH_REQUIRED") or "false").strip().lower() in {
+    "true",
+    "1",
+    "yes",
+    "on",
 }
 
 

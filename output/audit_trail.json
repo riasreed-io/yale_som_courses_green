@@ -445,5 +445,14 @@
     ],
     "stopped": "final answer (finish_reason=stop)",
     "reply": "**MGT 541: Corporate Finance** meets **Mondays and Wednesdays, 8:30–9:50 AM**."
+  },
+  {
+    "time": "2026-09-23T18:21:43+00:00",
+    "user_message": "test",
+    "model": "gpt-6-astra",
+    "thoughts": [],
+    "tool_calls": [],
+    "stopped": "final answer (finish_reason=stop)",
+    "reply": "Ready—ask me about Yale SOM courses, faculty, or schedules."
   }
 ]
