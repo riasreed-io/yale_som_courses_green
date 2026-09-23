@@ -1,17 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
-import { fetchCourses } from './api'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { clearSession, fetchCourses, getUsername, UnauthorizedError } from './api'
 import type { Course } from './api'
 import ChatPanel from './components/ChatPanel'
 import CourseCard from './components/CourseCard'
+import Login from './components/Login'
 
 export default function App() {
+  const [username, setUsername] = useState<string | null>(getUsername())
   const [query, setQuery] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [category, setCategory] = useState('All')
 
+  const signOut = useCallback(() => {
+    clearSession()
+    setUsername(null)
+    setCourses([])
+  }, [])
+
   useEffect(() => {
+    if (!username) return
     const controller = new AbortController()
     const timer = setTimeout(() => {
       setLoading(true)
@@ -22,6 +31,10 @@ export default function App() {
         })
         .catch((e: unknown) => {
           if (e instanceof DOMException && e.name === 'AbortError') return
+          if (e instanceof UnauthorizedError) {
+            signOut()
+            return
+          }
           setError('Could not load courses. Start the backend: uvicorn main:app --port 8000')
         })
         .finally(() => {
@@ -32,20 +45,33 @@ export default function App() {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [query])
+  }, [query, username, signOut])
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>()
-    for (const c of courses) counts.set(c['Course Category'], (counts.get(c['Course Category']) ?? 0) + 1)
+    for (const c of courses) counts.set(c.course_category, (counts.get(c.course_category) ?? 0) + 1)
     return [...counts.entries()].sort((a, b) => b[1] - a[1])
   }, [courses])
 
-  const shown = category === 'All' ? courses : courses.filter((c) => c['Course Category'] === category)
+  if (!username) {
+    return <Login onSignedIn={setUsername} />
+  }
+
+  const shown = category === 'All' ? courses : courses.filter((c) => c.course_category === category)
 
   return (
     <>
       <header className="hero">
         <div className="hero__inner">
+          <div className="hero__account">
+            <span>
+              Signed in as <strong>{username}</strong>
+            </span>
+            <button type="button" onClick={signOut}>
+              Sign out
+            </button>
+          </div>
+
           <p className="hero__eyebrow">Yale School of Management</p>
           <h1>Course Explorer</h1>
           <p className="hero__sub">Browse the full course list, or ask the assistant in the corner.</p>
@@ -90,15 +116,15 @@ export default function App() {
               {shown.length} {shown.length === 1 ? 'course' : 'courses'}
             </p>
             <div className={`grid ${loading ? 'grid--loading' : ''}`}>
-              {shown.map((c, i) => (
-                <CourseCard key={`${c['Course ID']}-${i}`} course={c} />
+              {shown.map((c) => (
+                <CourseCard key={c.id} course={c} />
               ))}
             </div>
           </>
         ) : null}
       </main>
 
-      <ChatPanel />
+      <ChatPanel onUnauthorized={signOut} />
     </>
   )
 }

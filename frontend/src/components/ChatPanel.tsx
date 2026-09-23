@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import Markdown from 'react-markdown'
-import { sendChat } from '../api'
+import { clearHistory, fetchHistory, sendChat, UnauthorizedError } from '../api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -21,12 +21,45 @@ const TOOL_LABELS: Record<string, string> = {
   web_search: 'Web search',
 }
 
-export default function ChatPanel() {
+interface Props {
+  onUnauthorized: () => void
+}
+
+export default function ChatPanel({ onUnauthorized }: Props) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  const loadedHistory = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
+
+  // Saved history comes back from the database the first time the panel opens.
+  useEffect(() => {
+    if (!open || loadedHistory.current) return
+    loadedHistory.current = true
+    fetchHistory()
+      .then((rows) =>
+        setMessages(
+          rows.map((r) => ({
+            role: r.role,
+            text: r.content,
+            tools: r.tools_used,
+          })),
+        ),
+      )
+      .catch((e: unknown) => {
+        if (e instanceof UnauthorizedError) onUnauthorized()
+      })
+  }, [open, onUnauthorized])
+
+  async function onClear() {
+    try {
+      await clearHistory()
+      setMessages([])
+    } catch (e) {
+      if (e instanceof UnauthorizedError) onUnauthorized()
+    }
+  }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -41,7 +74,11 @@ export default function ChatPanel() {
     try {
       const res = await sendChat(message)
       setMessages((m) => [...m, { role: 'assistant', text: res.reply, tools: res.tools_used }])
-    } catch {
+    } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        onUnauthorized()
+        return
+      }
       setMessages((m) => [
         ...m,
         { role: 'assistant', text: 'Could not reach the course agent. Is the backend running on port 8000?', error: true },
@@ -79,9 +116,16 @@ export default function ChatPanel() {
           <strong>Course assistant</strong>
           <span>Ask about any Yale SOM course</span>
         </div>
-        <button type="button" onClick={() => setOpen(false)} aria-label="Close chat">
-          ✕
-        </button>
+        <div className="chat__headbtns">
+          {messages.length > 0 ? (
+            <button type="button" onClick={() => void onClear()} title="Delete saved history">
+              Clear
+            </button>
+          ) : null}
+          <button type="button" onClick={() => setOpen(false)} aria-label="Close chat">
+            ✕
+          </button>
+        </div>
       </header>
 
       <div className="chat__body">

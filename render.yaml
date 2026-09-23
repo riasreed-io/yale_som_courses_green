@@ -1,0 +1,53 @@
+# Render Blueprint: one Web Service (FastAPI) + one Static Site (React).
+#
+# Deploy the backend FIRST — the frontend needs its URL for VITE_API_URL.
+#
+# Values marked `sync: false` are NOT stored in this file and must be set in
+# the Render dashboard. Never put PORTKEY_API_KEY or the Supabase connection
+# string in the repo.
+
+services:
+  # ---------------------------------------------------------------- backend
+  - type: web
+    name: yale-som-courses-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      # Render's default Python can lag; 3.12 is known to build these wheels.
+      - key: PYTHON_VERSION
+        value: "3.12"
+      # Portkey key — set in the dashboard, never here.
+      - key: PORTKEY_API_KEY
+        sync: false
+      # Supabase connection string, e.g.
+      #   postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+      # Signs session tokens. Render generates one; changing it signs everyone out.
+      - key: SECRET_KEY
+        generateValue: true
+      # The static site's URL, e.g. https://yale-som-courses-web.onrender.com
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # --------------------------------------------------------------- frontend
+  - type: web
+    name: yale-som-courses-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # The backend's URL, e.g. https://yale-som-courses-api.onrender.com
+      # Vite bakes this in at BUILD time — change it and you must redeploy.
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # Single-page app: send unknown paths to index.html instead of 404.
+      - type: rewrite
+        source: /*
+        destination: /index.html

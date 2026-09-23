@@ -410,5 +410,22 @@
     ],
     "stopped": "final answer (finish_reason=stop)",
     "reply": "I searched the web for the latest Yale SOM updates available as of **September 23, 2026**. The most recent items I found are:\n\n- **September 18 — Systemic risk news:** Yale SOM’s Program on Financial Stability highlighted the independent review of Silicon Valley Bank and reporting on the Bank of Japan’s rate increases. ([som.yale.edu](https://som.yale.edu/story/2026/news-systemic-risk-september-18-2026-945-am))\n- **September 18 — Rankings update:** Yale SOM reported that *U.S. News & World Report* ranked it **11th** among U.S. business schools, while the *Financial Times* ranked its full-time MBA **17th globally** and **8th in the U.S.** ([som.yale.edu](https://som.yale.edu/news/2021/03/yale-som-rankings-update))\n- **September 2 — Research:** Yale SOM professor Minjae Kim co-authored research on how publishing police traffic-stop data initially reduced stops in Black neighborhoods but was later followed by increases. ([insights.som.yale.edu](https://insights.som.yale.edu/departments/research))\n- **August 14 — Climate economics research:** Kelly Shue co-authored a working paper on how geoengineering could alter incentives surrounding renewable energy, fossil fuels, and carbon removal. ([insights.som.yale.edu](https://insights.som.yale.edu/departments/research))\n- **August 4 — Biodiversity finance:** Anya Nakhmurina co-authored research proposing an investment approach to financing bat-population restoration. ([insights.som.yale.edu](https://insights.som.yale.edu/departments/research))\n\nThe school’s public pages also show newer September 2026 program and student updates, including items for the **Master of Advanced Management**, **MBA for Executives**, and **Master’s in Technology Management**. ([som.yale.edu](https://som.yale.edu/news/2021/03/yale-som-rankings-update))"
+  },
+  {
+    "time": "2026-09-23T18:04:56+00:00",
+    "user_message": "Which courses does Uri Simonsohn teach?",
+    "model": "gpt-6-astra",
+    "thoughts": [],
+    "tool_calls": [
+      {
+        "tool": "search_courses",
+        "args": {
+          "query": "Courses taught by faculty member Uri Simonsohn. Find all course titles, course numbers, and any sections."
+        },
+        "result": "{\"total_matches\":1,\"returned\":1,\"note\":\"\",\"courses\":[{\"number\":\"MGMT 7307\",\"section\":\"01\",\"title\":\"Method Stumblers Part 1\",\"faculty\":\"Simonsohn, Uri\",\"category\":\"PhD\",\"type\":\"PHD\",\"session\":\"fall-1\",\"day_time\":\"W 4:10 PM-7:10 PM\",\"room\":\"EVANS 4210\",\"units\":\"0.5\",\"syllabus\":\"https://yale.instructu…"
+      }
+    ],
+    "stopped": "final answer (finish_reason=stop)",
+    "reply": "Uri Simonsohn teaches:\n\n- **MGMT 7307 — Method Stumblers Part 1**\n  - **Section:** 01\n  - **Term:** Fall 1\n  - **Meets:** Wednesdays, 4:10–7:10 PM\n  - **Room:** Evans 4210\n  - **Units:** 0.5\n  - **Category:** PhD"
   }
 ]

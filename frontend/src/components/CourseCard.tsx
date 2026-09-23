@@ -22,27 +22,28 @@ const CATEGORY_HUES: Record<string, string> = {
 }
 
 function initials(name: string): string {
-  const [last = '', first = ''] = name.split(',').map((s) => s.trim())
+  const [last = '', first = ''] = (name ?? '').split(',').map((s) => s.trim())
   return `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase() || '?'
 }
 
 function displayName(name: string): string {
-  const [last, first] = name.split(',').map((s) => s.trim())
+  const [last, first] = (name ?? '').split(',').map((s) => s.trim())
   return first ? `${first} ${last}` : name
 }
 
-function sessionLabel(session: string): string {
-  return session.replace('fall-', 'Fall ').replace(/^fall$/, 'Fall (full term)')
+function sessionLabel(session: string | null): string {
+  // DB columns can be NULL where the old JSON had an empty string.
+  return (session ?? '').replace('fall-', 'Fall ').replace(/^fall$/, 'Fall (full term)') || 'TBA'
 }
 
 export default function CourseCard({ course }: { course: Course }) {
   const [open, setOpen] = useState(false)
-  const category = course['Course Category']
+  const category = course.course_category
   const hue = CATEGORY_HUES[category] ?? 'default'
-  const syllabus = course.Syllabus || course['Old Syllabus']
-  const faculty = course['Faculty 1']
-  const description = course['Course Description'].trim()
-  const dan = furColorFor(`${course['Course Number']}${course.Section}`)
+  const syllabus = course.syllabus || course.old_syllabus
+  const faculty = course.faculty_1
+  const description = (course.course_description ?? '').trim()
+  const dan = furColorFor(`${course.course_number}${course.section}`)
 
   return (
     <article className={`card card--${hue}`}>
@@ -50,13 +51,13 @@ export default function CourseCard({ course }: { course: Course }) {
         <div className="card__headtext">
           <header className="card__top">
             <span className="card__number">
-              {course['Course Number']}
-              {course.Section ? <span className="card__section"> · §{course.Section}</span> : null}
+              {course.course_number}
+              {course.section ? <span className="card__section"> · §{course.section}</span> : null}
             </span>
             <span className="chip">{category}</span>
           </header>
 
-          <h3 className="card__title">{course['Course Title']}</h3>
+          <h3 className="card__title">{course.course_title}</h3>
         </div>
 
         <HandsomeDan furColor={dan} size={72} className="card__dan" />
@@ -76,19 +77,19 @@ export default function CourseCard({ course }: { course: Course }) {
       <dl className="card__facts">
         <div>
           <dt>When</dt>
-          <dd>{course.Daytimes || 'TBA'}</dd>
+          <dd>{course.daytimes || 'TBA'}</dd>
         </div>
         <div>
           <dt>Where</dt>
-          <dd>{course.Room || 'TBA'}</dd>
+          <dd>{course.room || 'TBA'}</dd>
         </div>
         <div>
           <dt>Session</dt>
-          <dd>{sessionLabel(course['Course Session'])}</dd>
+          <dd>{sessionLabel(course.course_session)}</dd>
         </div>
         <div>
           <dt>Units</dt>
-          <dd>{course.Units}</dd>
+          <dd>{course.units}</dd>
         </div>
       </dl>
 
@@ -98,12 +99,12 @@ export default function CourseCard({ course }: { course: Course }) {
 
       {open && course.faculty_bio ? (
         <p className="card__bio">
-          <strong>About the instructor.</strong> {course.faculty_bio.replace(/\(\[.*?\]\(.*?\)\)/g, '').trim()}
+          <strong>About the instructor.</strong> {(course.faculty_bio ?? '').replace(/\(\[.*?\]\(.*?\)\)/g, '').trim()}
         </p>
       ) : null}
 
       <footer className="card__footer">
-        <span className="badge">{course['Bid Or Permission']}</span>
+        <span className="badge">{course.course_type}</span>
         <div className="card__actions">
           {syllabus ? (
             <a href={syllabus} target="_blank" rel="noreferrer">

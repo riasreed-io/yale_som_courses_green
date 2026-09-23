@@ -1,6 +1,21 @@
+# Secrets — never commit. Ship .env.example only.
 .env
+.env.*
+!.env.example
+
+# Python
 .venv/
 __pycache__/
+*.py[cod]
+
+# Node
 node_modules/
+dist/
+*.tsbuildinfo
+
+# Archives and OS cruft
 *.zip
-*.db
+.DS_Store
+
+# Note: *.db is intentionally NOT ignored — data/yale_som.db is small (488 KB)
+# and is committed as the app's course data.
