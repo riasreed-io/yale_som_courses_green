@@ -1,4 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+// VITE_API_URL wins when set (Render env var, or .env.local for dev). Without
+// it we fall back to the deployed backend in production and localhost in dev,
+// so a deployed build never ends up calling the developer's own machine.
+const DEPLOYED_API = 'https://yale-som-courses-green-backend-l8tr.onrender.com'
+
+const API_URL =
+  import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? DEPLOYED_API : 'http://127.0.0.1:8000')
 
 const TOKEN_KEY = 'som.token'
 const USER_KEY = 'som.username'
